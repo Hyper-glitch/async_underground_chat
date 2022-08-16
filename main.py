@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import datetime
 import time
@@ -7,12 +8,30 @@ import aiofiles
 RECONNECTION_WAIT_TIME = 180
 
 
+def create_parser() -> argparse.Namespace:
+    """Create arg parser and add arguments.
+    Returns:
+        namespace: values or arguments, that parsed.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-H', '--host', help='TCP/IP hostname to serve on (default: %(default)r)', default='localhost',
+    )
+    parser.add_argument(
+        '-P', '--port', help='TCP/IP port to serve on (default: %(default)r)', type=int, default='8080',
+    )
+    parser.add_argument(
+        '-p', '--path', help='path to write chat history', type=str, default='minechat.history',
+    )
+    return parser.parse_args()
+
+
 async def write_chat_msg(data):
     async with aiofiles.open('chat_history', mode='a') as file:
         await file.write(data)
 
 
-async def tcp_client():
+async def listen_chat():
     host = 'minechat.dvmn.org'
     port = 5000
 
@@ -34,4 +53,4 @@ async def tcp_client():
 
 
 if __name__ == '__main__':
-    asyncio.run(tcp_client())
+    asyncio.run(listen_chat())
