@@ -28,6 +28,5 @@ async def send_messages(host: str, port: int, token):
 if __name__ == '__main__':
     host = CHAT_HOST
     send_port = SEND_CHAT_PORT
-    token = '66b440d2-1e24-11ed-8c47-0242ac110002\n'
 
     asyncio.run(send_messages(host=host, port=send_port, token=token))
