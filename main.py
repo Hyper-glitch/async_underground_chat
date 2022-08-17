@@ -10,6 +10,7 @@ from settings import RECONNECTION_WAIT_TIME, CHAT_PORT, CHAT_HOST, CHAT_HISTORY_
 
 def create_parser() -> argparse.Namespace:
     """Create arg parser and add arguments.
+
     Returns:
         namespace: values or arguments, that parsed.
     """
@@ -26,12 +27,28 @@ def create_parser() -> argparse.Namespace:
     return parser.parse_args()
 
 
-async def write_chat_msg(data, path):
+async def write_chat_msg(data: str, path: str):
+    """Write messages from chat line by line to a file.
+
+    Args:
+        data: message from chat for writing in a file.
+        path: filepath for chat history.
+    """
     async with aiofiles.open(path, mode='a') as file:
         await file.write(data)
 
 
-async def listen_chat(host, port, path):
+async def listen_chat(host: str, port: int, path: str):
+    """Write messages from chat line by line to a file.
+
+    Args:
+        host: TCP/IP hostname to open listen connection.
+        port: TCP/IP port to open listen connection.
+        path: filepath for chat history.
+
+    Raises:
+        Exception: if connection between server and client lost.
+    """
     while True:
         try:
             reader, writer = await asyncio.open_connection(host=host, port=port)
@@ -50,6 +67,7 @@ async def listen_chat(host, port, path):
 
 
 def main():
+    """Run the main logic for chat."""
     args = create_parser()
 
     host = CHAT_HOST if not args.host else args.host
