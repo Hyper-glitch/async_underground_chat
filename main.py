@@ -5,7 +5,7 @@ import time
 
 import aiofiles
 
-RECONNECTION_WAIT_TIME = 180
+from settings import RECONNECTION_WAIT_TIME, CHAT_PORT, CHAT_HOST, CHAT_HISTORY_PATH
 
 
 def create_parser() -> argparse.Namespace:
@@ -15,10 +15,10 @@ def create_parser() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-H', '--host', help='TCP/IP hostname to serve on (default: %(default)r)', default='localhost',
+        '-H', '--host', help='TCP/IP hostname to serve on (default: %(default)r)', default='minechat.dvmn.org',
     )
     parser.add_argument(
-        '-P', '--port', help='TCP/IP port to serve on (default: %(default)r)', type=int, default='8080',
+        '-P', '--port', help='TCP/IP port to serve on (default: %(default)r)', type=int, default='5000',
     )
     parser.add_argument(
         '-p', '--path', help='path to write chat history', type=str, default='minechat.history',
@@ -27,17 +27,15 @@ def create_parser() -> argparse.Namespace:
 
 
 async def write_chat_msg(data):
-    async with aiofiles.open('chat_history', mode='a') as file:
+    async with aiofiles.open(CHAT_HISTORY_PATH, mode='a') as file:
         await file.write(data)
 
 
 async def listen_chat():
-    host = 'minechat.dvmn.org'
-    port = 5000
 
     while True:
         try:
-            reader, writer = await asyncio.open_connection(host=host, port=port)
+            reader, writer = await asyncio.open_connection(host=CHAT_HOST, port=CHAT_PORT)
         except Exception:
             time.sleep(RECONNECTION_WAIT_TIME)
             continue
