@@ -18,7 +18,7 @@ async def write_data(writer, data: str):
     await writer.drain()
 
 
-async def auth_user(host, port, token: str):
+async def authorise(host, port, token: str):
     reader, writer = await asyncio.open_connection(host=host, port=port)
 
     logger.debug(await read_line(reader))
@@ -33,7 +33,7 @@ async def auth_user(host, port, token: str):
     return user_info
 
 
-async def registrate_user(host, port, nickname):
+async def registrate(host, port, nickname):
     reader, writer = await asyncio.open_connection(host=host, port=port)
 
     logger.debug(await read_line(reader))
@@ -69,4 +69,4 @@ if __name__ == '__main__':
     token = AUTH_TOKEN
     nickname = 'jepka'
 
-    asyncio.run(registrate_user(host=host, port=send_port, nickname=nickname))
+    asyncio.run(registrate(host=host, port=send_port, nickname=nickname))
