@@ -37,22 +37,22 @@ def create_parser() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-H', '--host', help='TCP/IP hostname to serve on (default: %(default)r)',
+        '-H', '--host', help='TCP/IP hostname to listen chat (default: %(default)r)',
     )
     parser.add_argument(
-        '-R', '--read_port', help='TCP/IP port to serve on (default: %(default)r)', type=int,
+        '-R', '--read_port', help='TCP/IP port for reading messages from the chat (default: %(default)r)', type=int,
     )
     parser.add_argument(
-        '-S', '--send_port', help='TCP/IP port to serve on (default: %(default)r)', type=int,
+        '-S', '--send_port', help='TCP/IP port for sending messages to the chat (default: %(default)r)', type=int,
     )
     parser.add_argument(
-        '-P', '--path', help='path to write chat history', type=str,
+        '-P', '--path', help='a path to write chat history', type=str,
     )
     parser.add_argument(
         '-T', '--token', help='token that authorize user in chat', type=str,
     )
     parser.add_argument(
-        '-U', '--username', help='your alias in chat', type=str,
+        '-N', '--nickname', help='your alias in chat', type=str,
     )
     parser.add_argument(
         '-M', '--message', help='message that sends to the chat', type=str, nargs='+', required=True,
