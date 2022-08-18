@@ -12,3 +12,4 @@ AUTH_TOKEN = env.str('AUTH_TOKEN', '')
 
 FAILED_AUTH_MESSAGE = 'Неизвестный токен. Проверьте его или зарегистрируйтесь заново.'
 RECONNECTION_WAIT_TIME = 180
+EMPTY_LINE = '\n'
