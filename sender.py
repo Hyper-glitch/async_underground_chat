@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from asyncio import StreamReader, StreamWriter
 
 from chat_utils import write_to_file
 from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE
@@ -34,13 +35,14 @@ async def authorise(host, port, token: str):
 
 
 async def registrate(host, port, nickname):
+    sanitized_nickname = nickname.replace('\n', '')
     reader, writer = await asyncio.open_connection(host=host, port=port)
 
     logger.debug(await read_line(reader))
     await write_data(writer=writer, data=EMPTY_LINE)
 
     logger.debug(await read_line(reader))
-    await write_data(writer=writer, data=f'{nickname}{EMPTY_LINE}')
+    await write_data(writer=writer, data=f'{sanitized_nickname}{EMPTY_LINE}')
 
     user_info = json.loads(await read_line(reader))
     logger.debug(user_info)
@@ -50,17 +52,10 @@ async def registrate(host, port, nickname):
     writer.close()
 
 
-async def send_messages(host: str, port: int, token: str, message: str):
-    reader, writer = await asyncio.open_connection(host=host, port=port)
+async def send_messages(reader: StreamReader, writer: StreamWriter, message: str):
+    sanitized_msg = message.replace('\n', '')
+    await write_data(writer, data=f'{sanitized_msg}{EMPTY_LINE*2}')
     logger.debug(await read_line(reader))
-
-    await write_data(writer, data=f'{token}\n')
-    logger.debug(await read_line(reader))
-
-    await write_data(writer, data=f'{message}\n\n')
-    logger.debug(await read_line(reader))
-
-    writer.close()
 
 
 if __name__ == '__main__':
