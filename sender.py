@@ -3,25 +3,13 @@ import json
 import logging
 from asyncio import StreamReader, StreamWriter
 
-from chat_utils import write_to_file
-from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE
+from chat_utils import write_to_file, create_parser, read_line, write_data
+from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE, NICKNAME
 
 logger = logging.getLogger(__name__)
 
 
-async def read_line(reader) -> str:
-    chat_line = await reader.readline()
-    return chat_line.decode('utf-8').strip()
-
-
-async def write_data(writer, data: str):
-    writer.write(data.encode())
-    await writer.drain()
-
-
-async def authorise(host, port, token: str):
-    reader, writer = await asyncio.open_connection(host=host, port=port)
-
+async def authorise(reader, writer, token: str):
     logger.debug(await read_line(reader))
     await write_data(writer=writer, data=f'{token}{EMPTY_LINE}')
 
@@ -29,14 +17,10 @@ async def authorise(host, port, token: str):
     logger.debug(user_info)
 
     assert user_info is not None, FAILED_AUTH_MESSAGE
-    writer.close()
-
-    return user_info
 
 
-async def registrate(host, port, nickname):
-    sanitized_nickname = nickname.replace('\n', '')
-    reader, writer = await asyncio.open_connection(host=host, port=port)
+async def registrate(reader, writer, username):
+    sanitized_nickname = username.replace('\n', '')
 
     logger.debug(await read_line(reader))
     await write_data(writer=writer, data=EMPTY_LINE)
@@ -44,24 +28,38 @@ async def registrate(host, port, nickname):
     logger.debug(await read_line(reader))
     await write_data(writer=writer, data=f'{sanitized_nickname}{EMPTY_LINE}')
 
-    user_info = json.loads(await read_line(reader))
-    logger.debug(user_info)
+    reg_info = json.loads(await read_line(reader))
+    logger.debug(reg_info)
 
-    await write_to_file(data=user_info, path=f'users_info/{user_info["account_hash"]}.json')
+    await write_to_file(data=reg_info, path=f'users_info/{reg_info["account_hash"]}.json')
+    return reg_info
 
-    writer.close()
 
-
-async def send_messages(reader: StreamReader, writer: StreamWriter, message: str):
+async def send_message(reader: StreamReader, writer: StreamWriter, message: str):
     sanitized_msg = message.replace('\n', '')
-    await write_data(writer, data=f'{sanitized_msg}{EMPTY_LINE*2}')
+    await write_data(writer, data=f'{sanitized_msg}{EMPTY_LINE * 2}')
     logger.debug(await read_line(reader))
 
 
-if __name__ == '__main__':
-    host = CHAT_HOST
-    send_port = SEND_CHAT_PORT
-    token = AUTH_TOKEN
-    nickname = 'jepka'
+async def run_sender(host, port, username, token, message):
+    if not token:
+        reader, writer = await asyncio.open_connection(host=host, port=port)
+        reg_info = await registrate(reader, writer, username)
+        token = reg_info['account_hash']
+        writer.close()
 
-    asyncio.run(registrate(host=host, port=send_port, nickname=nickname))
+    reader, writer = await asyncio.open_connection(host=host, port=port)
+    await authorise(reader, writer, token=token)
+    await send_message(reader, writer, message=message)
+
+
+if __name__ == '__main__':
+    args = create_parser()
+
+    host = CHAT_HOST if not args.host else args.host
+    send_port = SEND_CHAT_PORT if not args.send_port else args.send_port
+    token = AUTH_TOKEN if not args.token else args.token
+    username = NICKNAME if not args.username else args.username
+    message = 'Teeeeeeest meeeesssssagegeee!' if not args.message else ' '.join(args.message)
+
+    asyncio.run(run_sender(host=host, port=send_port, username=username, token=token, message=message))
