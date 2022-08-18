@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from reader import read_messages
-from sender import send_messages
+from sender import registrate
 from settings import READ_CHAT_PORT, CHAT_HOST, CHAT_HISTORY_PATH, SEND_CHAT_PORT, AUTH_TOKEN
 
 logger = logging.getLogger(__name__)
@@ -44,10 +44,11 @@ async def main():
     send_port = SEND_CHAT_PORT if not args.send_port else args.send_port
     path = CHAT_HISTORY_PATH if not args.path else args.path
     token = AUTH_TOKEN
+    nickname = 'jepka'
 
     tasks = [
         asyncio.create_task(read_messages(host=host, port=read_port, path=path)),
-        asyncio.create_task(send_messages(host=host, port=send_port, token=token, message='blablabla')),
+        asyncio.create_task(registrate(host=host, port=send_port, nickname=nickname)),
     ]
 
     await asyncio.gather(*tasks)
