@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import os
 from asyncio import StreamReader, StreamWriter
 
 from chat_utils import write_to_file, create_parser, read_line, write_data
@@ -19,7 +20,7 @@ async def authorise(reader, writer, token: str):
     assert user_info is not None, FAILED_AUTH_MESSAGE
 
 
-async def registrate(reader, writer, username):
+async def registrate(reader, writer, username, path):
     sanitized_nickname = username.replace('\n', '')
 
     logger.debug(await read_line(reader))
@@ -31,7 +32,8 @@ async def registrate(reader, writer, username):
     reg_info = json.loads(await read_line(reader))
     logger.debug(reg_info)
 
-    await write_to_file(data=reg_info, path=f'users_info/{reg_info["account_hash"]}.json')
+    file_path = os.path.join(path, f'{reg_info["account_hash"]}.json')
+    await write_to_file(data=reg_info, path=file_path)
     return reg_info
 
 
@@ -49,10 +51,13 @@ async def run_sender():
     token = AUTH_TOKEN if not args.token else args.token
     username = NICKNAME if not args.nickname else args.nickname
     message = 'Teeeeeeest meeeesssssagegeee!' if not args.message else ' '.join(args.message)
+    accounts_path = 'users_info'
+
+    os.makedirs(accounts_path, exist_ok=True)
 
     if not token:
         reader, writer = await asyncio.open_connection(host=host, port=send_port)
-        reg_info = await registrate(reader, writer, username)
+        reg_info = await registrate(reader, writer, username, accounts_path)
         token = reg_info['account_hash']
         writer.close()
 
