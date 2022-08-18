@@ -1,9 +1,12 @@
 import argparse
 import asyncio
+import logging
 
 from reader import read_messages
 from sender import send_messages
-from settings import READ_CHAT_PORT, CHAT_HOST, CHAT_HISTORY_PATH, SEND_CHAT_PORT
+from settings import READ_CHAT_PORT, CHAT_HOST, CHAT_HISTORY_PATH, SEND_CHAT_PORT, AUTH_TOKEN
+
+logger = logging.getLogger(__name__)
 
 
 def create_parser() -> argparse.Namespace:
@@ -32,15 +35,19 @@ async def main():
     """Run the main logic for chat."""
     args = create_parser()
 
+    logging.basicConfig(
+        format=u'%(levelname)s %(filename)s %(message)s', level=logging.DEBUG,
+    )
+
     host = CHAT_HOST if not args.host else args.host
     read_port = READ_CHAT_PORT if not args.read_port else args.read_port
     send_port = SEND_CHAT_PORT if not args.send_port else args.send_port
     path = CHAT_HISTORY_PATH if not args.path else args.path
-    token = '66b440d2-1e24-11ed-8c47-0242ac110002\n'
+    token = AUTH_TOKEN
 
     tasks = [
         asyncio.create_task(read_messages(host=host, port=read_port, path=path)),
-        asyncio.create_task(send_messages(host=host, port=send_port, token=token)),
+        asyncio.create_task(send_messages(host=host, port=send_port, token=token, message='blablabla')),
     ]
 
     await asyncio.gather(*tasks)
