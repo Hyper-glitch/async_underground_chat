@@ -47,7 +47,7 @@ async def run_sender():
     host = CHAT_HOST if not args.host else args.host
     send_port = SEND_CHAT_PORT if not args.send_port else args.send_port
     token = AUTH_TOKEN if not args.token else args.token
-    username = NICKNAME if not args.username else args.username
+    username = NICKNAME if not args.nickname else args.nickname
     message = 'Teeeeeeest meeeesssssagegeee!' if not args.message else ' '.join(args.message)
 
     if not token:
