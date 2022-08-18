@@ -139,3 +139,4 @@ cython_debug/
 
 .idea
 minechat.history
+users_info
