@@ -41,19 +41,7 @@ async def send_message(reader: StreamReader, writer: StreamWriter, message: str)
     logger.debug(await read_line(reader))
 
 
-async def run_sender(host, port, username, token, message):
-    if not token:
-        reader, writer = await asyncio.open_connection(host=host, port=port)
-        reg_info = await registrate(reader, writer, username)
-        token = reg_info['account_hash']
-        writer.close()
-
-    reader, writer = await asyncio.open_connection(host=host, port=port)
-    await authorise(reader, writer, token=token)
-    await send_message(reader, writer, message=message)
-
-
-if __name__ == '__main__':
+async def run_sender():
     args = create_parser()
 
     host = CHAT_HOST if not args.host else args.host
@@ -62,4 +50,12 @@ if __name__ == '__main__':
     username = NICKNAME if not args.username else args.username
     message = 'Teeeeeeest meeeesssssagegeee!' if not args.message else ' '.join(args.message)
 
-    asyncio.run(run_sender(host=host, port=send_port, username=username, token=token, message=message))
+    if not token:
+        reader, writer = await asyncio.open_connection(host=host, port=send_port)
+        reg_info = await registrate(reader, writer, username)
+        token = reg_info['account_hash']
+        writer.close()
+
+    reader, writer = await asyncio.open_connection(host=host, port=send_port)
+    await authorise(reader, writer, token=token)
+    await send_message(reader, writer, message=message)
