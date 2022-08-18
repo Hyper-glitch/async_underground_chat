@@ -3,7 +3,7 @@ import datetime
 import logging
 import time
 
-from chat_utils import write_chat_msg
+from chat_utils import write_to_file
 from settings import RECONNECTION_WAIT_TIME, CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ async def read_messages(host: str, port: int, path: str):
 
         formatted_message = f'[{formatted_date}] {message.decode()}'
         print(formatted_message)
-        await write_chat_msg(data=formatted_message, path=path)
+        await write_to_file(data=formatted_message, path=path)
         writer.close()
 
 
