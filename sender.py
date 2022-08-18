@@ -2,7 +2,8 @@ import asyncio
 import json
 import logging
 
-from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE
+from chat_utils import write_to_file
+from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +18,36 @@ async def write_data(writer, data: str):
     await writer.drain()
 
 
-async def auth(host, port, token: str):
+async def auth_user(host, port, token: str):
     reader, writer = await asyncio.open_connection(host=host, port=port)
 
     logger.debug(await read_line(reader))
-    await write_data(writer=writer, data=f'{token}\n')
+    await write_data(writer=writer, data=f'{token}{EMPTY_LINE}')
 
-    account_info = json.loads(await read_line(reader))
-    logger.debug(account_info)
+    user_info = json.loads(await read_line(reader))
+    logger.debug(user_info)
 
-    assert account_info is not None, FAILED_AUTH_MESSAGE
-    return account_info
+    assert user_info is not None, FAILED_AUTH_MESSAGE
+    writer.close()
+
+    return user_info
+
+
+async def registrate_user(host, port, nickname):
+    reader, writer = await asyncio.open_connection(host=host, port=port)
+
+    logger.debug(await read_line(reader))
+    await write_data(writer=writer, data=EMPTY_LINE)
+
+    logger.debug(await read_line(reader))
+    await write_data(writer=writer, data=f'{nickname}{EMPTY_LINE}')
+
+    user_info = json.loads(await read_line(reader))
+    logger.debug(user_info)
+
+    await write_to_file(data=user_info, path=f'users_info/{user_info["account_hash"]}.json')
+
+    writer.close()
 
 
 async def send_messages(host: str, port: int, token: str, message: str):
@@ -35,7 +55,6 @@ async def send_messages(host: str, port: int, token: str, message: str):
     logger.debug(await read_line(reader))
 
     await write_data(writer, data=f'{token}\n')
-    account_info = json.loads(await reader.readline())
     logger.debug(await read_line(reader))
 
     await write_data(writer, data=f'{message}\n\n')
@@ -48,5 +67,6 @@ if __name__ == '__main__':
     host = CHAT_HOST
     send_port = SEND_CHAT_PORT
     token = AUTH_TOKEN
+    nickname = 'jepka'
 
-    asyncio.run(auth(token=token))
+    asyncio.run(registrate_user(host=host, port=send_port, nickname=nickname))
