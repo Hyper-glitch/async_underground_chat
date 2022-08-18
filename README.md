@@ -3,7 +3,6 @@
 This project allows you to connect to the underground minecraft chat, read messages, register and authorise users, send messages.
 
 ## Setup
-The chat client requires a Python version at least 3.6.
 
 ```bash
 pip install -r requirements.txt
