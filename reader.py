@@ -1,9 +1,12 @@
 import asyncio
 import datetime
+import logging
 import time
 
 from chat_utils import write_chat_msg
 from settings import RECONNECTION_WAIT_TIME, CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH
+
+logger = logging.getLogger(__name__)
 
 
 async def read_messages(host: str, port: int, path: str):
