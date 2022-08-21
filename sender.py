@@ -4,6 +4,7 @@ import os
 from asyncio import StreamReader, StreamWriter
 
 from chat_utils import write_to_file, create_parser, read_line, write_data, open_connection
+from exceptions import FailedAuthError
 from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE, NICKNAME
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,8 @@ async def authorise(reader, writer, token: str):
     user_info = json.loads(await read_line(reader))
     logger.debug(user_info)
 
-    assert user_info is not None, FAILED_AUTH_MESSAGE
+    if not user_info:
+        raise FailedAuthError(FAILED_AUTH_MESSAGE)
 
 
 async def registrate(reader, writer, username, path):
