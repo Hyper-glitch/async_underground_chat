@@ -3,7 +3,9 @@ import logging
 import os
 from asyncio import StreamReader, StreamWriter
 
-from chat_utils import write_to_file, create_parser, read_line, write_data, open_connection
+import aiofiles
+
+from chat_utils import create_parser, read_line, write_data, open_connection
 from exceptions import FailedAuthError
 from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE, NICKNAME
 
@@ -30,11 +32,14 @@ async def registrate(reader, writer, username, path):
     logger.debug(await read_line(reader))
     await write_data(writer=writer, data=f'{sanitized_nickname}{EMPTY_LINE}')
 
-    reg_info = json.loads(await read_line(reader))
-    logger.debug(reg_info)
+    raw_reg_info = await read_line(reader)
+    reg_info = json.loads(raw_reg_info)
 
     file_path = os.path.join(path, f'{reg_info["account_hash"]}.json')
-    await write_to_file(data=reg_info, path=file_path)
+    async with aiofiles.open(file_path, mode='w') as file:
+        await file.write(raw_reg_info)
+    logger.debug(reg_info)
+
     return reg_info
 
 

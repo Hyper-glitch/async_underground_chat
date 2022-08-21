@@ -1,10 +1,6 @@
 import argparse
 import asyncio
-import json
 from contextlib import asynccontextmanager
-from typing import Union
-
-import aiofiles
 
 
 @asynccontextmanager
@@ -24,20 +20,6 @@ async def read_line(reader) -> str:
 async def write_data(writer, data: str):
     writer.write(data.encode())
     await writer.drain()
-
-
-async def write_to_file(data: Union[str, dict], path: str):
-    """Write messages from chat line by line to a file.
-
-    Args:
-        data: message from chat for writing in a file.
-        path: filepath for chat history.
-    """
-    if isinstance(data, dict):
-        data = json.dumps(data)
-
-    async with aiofiles.open(path, mode='a') as file:
-        await file.write(data)
 
 
 def create_parser() -> argparse.Namespace:
