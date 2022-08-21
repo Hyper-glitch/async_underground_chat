@@ -1,10 +1,9 @@
-import asyncio
 import json
 import logging
 import os
 from asyncio import StreamReader, StreamWriter
 
-from chat_utils import write_to_file, create_parser, read_line, write_data
+from chat_utils import write_to_file, create_parser, read_line, write_data, open_connection
 from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE, NICKNAME
 
 logger = logging.getLogger(__name__)
@@ -56,11 +55,12 @@ async def run_sender():
     os.makedirs(accounts_path, exist_ok=True)
 
     if not token:
-        reader, writer = await asyncio.open_connection(host=host, port=send_port)
-        reg_info = await registrate(reader, writer, username, accounts_path)
+        async with open_connection(host, send_port) as conn:
+            reader, writer = conn
+            reg_info = await registrate(reader, writer, username, accounts_path)
         token = reg_info['account_hash']
-        writer.close()
 
-    reader, writer = await asyncio.open_connection(host=host, port=send_port)
-    await authorise(reader, writer, token=token)
-    await send_message(reader, writer, message=message)
+    async with open_connection(host, send_port) as conn:
+        reader, writer = conn
+        await authorise(reader, writer, token=token)
+        await send_message(reader, writer, message=message)

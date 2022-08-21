@@ -1,8 +1,19 @@
 import argparse
+import asyncio
 import json
+from contextlib import asynccontextmanager
 from typing import Union
 
 import aiofiles
+
+
+@asynccontextmanager
+async def open_connection(host, port):
+    reader, writer = await asyncio.open_connection(host=host, port=port)
+    try:
+        yield reader, writer
+    finally:
+        writer.close()
 
 
 async def read_line(reader) -> str:

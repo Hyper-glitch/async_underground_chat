@@ -1,10 +1,8 @@
-import asyncio
 import datetime
 import logging
-import time
 
-from chat_utils import write_to_file, create_parser
-from settings import RECONNECTION_WAIT_TIME, CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH
+from chat_utils import write_to_file, create_parser, open_connection
+from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +20,9 @@ async def run_reader():
     path = CHAT_HISTORY_PATH if not args.path else args.path
 
     while True:
-        try:
-            reader, writer = await asyncio.open_connection(host=host, port=read_port)
-        except Exception:
-            time.sleep(RECONNECTION_WAIT_TIME)
-            continue
-
-        message = await reader.readline()
+        async with open_connection(host, read_port) as conn:
+            reader, _ = conn
+            message = await reader.readline()
 
         now = datetime.datetime.now()
         formatted_date = now.strftime("%Y.%m.%d %H:%M:%S")
@@ -36,4 +30,3 @@ async def run_reader():
         formatted_message = f'[{formatted_date}] {message.decode()}'
         print(formatted_message)
         await write_to_file(data=formatted_message, path=path)
-        writer.close()
