@@ -53,11 +53,11 @@ async def run_sender():
     parser = create_parser()
     args = parser.parse_args()
 
-    host = CHAT_HOST if not args.host else args.host
-    send_port = SEND_CHAT_PORT if not args.send_port else args.send_port
-    token = AUTH_TOKEN if not args.token else args.token
-    username = NICKNAME if not args.nickname else args.nickname
-    message = 'Teeeeeeest meeeesssssagegeee!' if not args.message else ' '.join(args.message)
+    host = args.host or CHAT_HOST
+    send_port = args.send_port or SEND_CHAT_PORT
+    token = args.token or AUTH_TOKEN
+    username = args.nickname or NICKNAME
+    message = ' '.join(args.message)
     accounts_path = 'users_info'
 
     os.makedirs(accounts_path, exist_ok=True)

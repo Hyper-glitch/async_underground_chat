@@ -18,9 +18,9 @@ async def run_reader():
     parser = create_parser()
     args = parser.parse_args()
 
-    host = CHAT_HOST if not args.host else args.host
-    read_port = READ_CHAT_PORT if not args.read_port else args.read_port
-    path = CHAT_HISTORY_PATH if not args.path else args.path
+    host = args.host or CHAT_HOST
+    read_port = args.read_port or READ_CHAT_PORT
+    path = args.path or CHAT_HISTORY_PATH
 
     async with aiofiles.open(path, mode='a') as file:
         async with open_connection(host, read_port) as conn:
