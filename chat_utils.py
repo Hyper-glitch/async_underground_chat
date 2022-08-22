@@ -22,7 +22,7 @@ async def write_data(writer, data: str):
     await writer.drain()
 
 
-def create_parser() -> argparse.Namespace:
+def create_parser() -> argparse.ArgumentParser:
     """Create arg parser and add arguments.
 
     Returns:
@@ -50,4 +50,4 @@ def create_parser() -> argparse.Namespace:
     parser.add_argument(
         '-M', '--message', help='message that sends to the chat', type=str, nargs='+', required=True,
     )
-    return parser.parse_args()
+    return parser
