@@ -50,7 +50,8 @@ async def send_message(reader: StreamReader, writer: StreamWriter, message: str)
 
 
 async def run_sender():
-    args = create_parser()
+    parser = create_parser()
+    args = parser.parse_args()
 
     host = CHAT_HOST if not args.host else args.host
     send_port = SEND_CHAT_PORT if not args.send_port else args.send_port

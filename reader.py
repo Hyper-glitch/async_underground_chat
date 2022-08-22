@@ -15,7 +15,8 @@ async def run_reader():
     Raises:
         Exception: if connection between server and client lost.
     """
-    args = create_parser()
+    parser = create_parser()
+    args = parser.parse_args()
 
     host = CHAT_HOST if not args.host else args.host
     read_port = READ_CHAT_PORT if not args.read_port else args.read_port
