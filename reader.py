@@ -1,12 +1,10 @@
+import asyncio
 import datetime
-import logging
 
 import aiofiles
 
 from chat_utils import create_parser, open_connection
 from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH
-
-logger = logging.getLogger(__name__)
 
 
 async def run_reader():
@@ -34,3 +32,7 @@ async def run_reader():
                 formatted_message = f'[{formatted_date}] {message.decode()}'
                 print(formatted_message)
                 await file.write(formatted_message)
+
+
+if __name__ == '__main__':
+    asyncio.run(run_reader())

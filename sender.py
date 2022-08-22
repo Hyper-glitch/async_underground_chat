@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -72,3 +73,10 @@ async def run_sender():
         reader, writer = conn
         await authorise(reader, writer, token=token)
         await send_message(reader, writer, message=message)
+
+
+if __name__ == '__main__':
+    logging.basicConfig(
+        format=u'%(levelname)s %(filename)s %(message)s', level=logging.DEBUG,
+    )
+    asyncio.run(run_sender())
