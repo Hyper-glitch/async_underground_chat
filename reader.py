@@ -1,13 +1,17 @@
 import datetime
+import logging
+import time
 
 import aiofiles
 
 import gui
 from chat_utils import open_connection, create_parser
-from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH
+from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH, READ_MSG_TEXT
+
+watchdog_logger = logging.getLogger('watchdog_logger')
 
 
-async def read_msgs(messages_queue, status_updates_queue):
+async def read_msgs(messages_queue, status_updates_queue, watchdog_queue):
     """Write messages from chat line by line to a file.
 
     Raises:
@@ -28,6 +32,8 @@ async def read_msgs(messages_queue, status_updates_queue):
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.ESTABLISHED)
             while True:
                 message = await reader.readline()
+                watchdog_queue.put_nowait(f'[{int(time.time())}] {READ_MSG_TEXT}')
+
                 now = datetime.datetime.now()
                 formatted_date = now.strftime("%Y.%m.%d %H:%M:%S")
                 formatted_message = f'[{formatted_date}] {message.decode()}'
