@@ -6,6 +6,7 @@ from tkinter import messagebox
 
 import aiofiles
 
+import gui
 from chat_utils import create_parser, read_line, write_data, open_connection
 from exceptions import InvalidToken
 from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE, NICKNAME
@@ -13,7 +14,7 @@ from settings import CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE,
 logger = logging.getLogger(__name__)
 
 
-async def authorise(reader, writer, token: str):
+async def authorise(reader, writer, token: str) -> dict:
     logger.debug(await read_line(reader))
     await write_data(writer=writer, data=f'{token}{EMPTY_LINE}')
 
@@ -24,6 +25,7 @@ async def authorise(reader, writer, token: str):
         raise InvalidToken(FAILED_AUTH_MESSAGE)
 
     logger.debug(f'Authorization completed. User: {user_info["nickname"]}')
+    return user_info
 
 
 async def registrate(reader, writer, username, path):
@@ -52,8 +54,9 @@ async def send_message(reader: StreamReader, writer: StreamWriter, message: str)
     logger.debug(await read_line(reader))
 
 
-async def send_msgs(sending_queue):
+async def send_msgs(sending_queue, status_updates_queue):
     logging.basicConfig(format=u'%(levelname)s %(filename)s %(message)s', level=logging.DEBUG)
+    status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
 
     parser = create_parser()
     args = parser.parse_args()
@@ -68,13 +71,19 @@ async def send_msgs(sending_queue):
 
     if not token:
         async with open_connection(host, send_port) as conn:
+            status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)
             reader, writer = conn
             reg_info = await registrate(reader, writer, username, accounts_path)
         token = reg_info['account_hash']
 
     async with open_connection(host, send_port) as conn:
+        status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)
         reader, writer = conn
-        await authorise(reader, writer, token=token)
+
+        auth_info = await authorise(reader, writer, token=token)
+        event = gui.NicknameReceived(auth_info['nickname'])
+        status_updates_queue.put_nowait(event)
+
         while True:
             message = await sending_queue.get()
             await send_message(reader, writer, message=message)
