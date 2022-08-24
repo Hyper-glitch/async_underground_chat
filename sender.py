@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 import os
@@ -50,7 +49,9 @@ async def send_message(reader: StreamReader, writer: StreamWriter, message: str)
     logger.debug(await read_line(reader))
 
 
-async def run_sender():
+async def send_msgs(sending_queue):
+    logging.basicConfig(format=u'%(levelname)s %(filename)s %(message)s', level=logging.DEBUG)
+
     parser = create_parser()
     args = parser.parse_args()
 
@@ -58,7 +59,6 @@ async def run_sender():
     send_port = args.send_port or SEND_CHAT_PORT
     token = args.token or AUTH_TOKEN
     username = args.nickname or NICKNAME
-    message = ' '.join(args.message)
     accounts_path = 'users_info'
 
     os.makedirs(accounts_path, exist_ok=True)
@@ -72,11 +72,6 @@ async def run_sender():
     async with open_connection(host, send_port) as conn:
         reader, writer = conn
         await authorise(reader, writer, token=token)
-        await send_message(reader, writer, message=message)
-
-
-if __name__ == '__main__':
-    logging.basicConfig(
-        format=u'%(levelname)s %(filename)s %(message)s', level=logging.DEBUG,
-    )
-    asyncio.run(run_sender())
+        while True:
+            message = await sending_queue.get()
+            await send_message(reader, writer, message=message)
