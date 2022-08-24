@@ -3,3 +3,7 @@
 
 class FailedAuthError(Exception):
     pass
+
+
+class TkAppClosed(Exception):
+    pass

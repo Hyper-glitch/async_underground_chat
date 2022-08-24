@@ -3,11 +3,8 @@ import tkinter as tk
 from enum import Enum
 from tkinter.scrolledtext import ScrolledText
 
+from exceptions import TkAppClosed
 from settings import GUI_TITTLE, SEND_GUI_BUTTON
-
-
-class TkAppClosed(Exception):
-    pass
 
 
 class ReadConnectionStateChanged(Enum):
@@ -89,14 +86,15 @@ def create_status_panel(root_frame):
 
     connections_frame = tk.Frame(status_frame)
     connections_frame.pack(side='left')
+    label_kwargs = {'height': 1, 'fg': 'grey', 'font': 'arial 10', 'anchor': 'w'}
 
-    nickname_label = tk.Label(connections_frame, height=1, fg='grey', font='arial 10', anchor='w')
+    nickname_label = tk.Label(connections_frame, **label_kwargs)
     nickname_label.pack(side='top', fill=tk.X)
 
-    status_read_label = tk.Label(connections_frame, height=1, fg='grey', font='arial 10', anchor='w')
+    status_read_label = tk.Label(connections_frame, **label_kwargs)
     status_read_label.pack(side='top', fill=tk.X)
 
-    status_write_label = tk.Label(connections_frame, height=1, fg='grey', font='arial 10', anchor='w')
+    status_write_label = tk.Label(connections_frame, **label_kwargs)
     status_write_label.pack(side='top', fill=tk.X)
 
     return nickname_label, status_read_label, status_write_label
