@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 
@@ -51,3 +52,13 @@ def create_parser() -> argparse.ArgumentParser:
         '-M', '--message', help='message that sends to the chat', type=str, nargs='+', required=True,
     )
     return parser
+
+
+def set_up_logger():
+    watchdog_logger = logging.getLogger('watchdog_logger')
+    watchdog_logger.setLevel(logging.DEBUG)
+
+    watchdog_handler = logging.StreamHandler()
+    watchdog_handler.setLevel(logging.DEBUG)
+    watchdog_handler.setFormatter(logging.Formatter(u'%(message)s'))
+    watchdog_logger.addHandler(watchdog_handler)
