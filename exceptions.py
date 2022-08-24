@@ -1,7 +1,7 @@
 """Module for chat exceptions."""
 
 
-class FailedAuthError(Exception):
+class InvalidToken(Exception):
     pass
 
 
