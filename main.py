@@ -1,9 +1,18 @@
 import asyncio
 
+import aiofiles
+
 import gui
 from chat_utils import create_parser
 from reader import read_msgs
 from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH
+
+
+async def show_history(messages_queue):
+    async with aiofiles.open(CHAT_HISTORY_PATH, mode='r') as file:
+        lines = await file.readlines()
+    for line in lines:
+        messages_queue.put_nowait(line)
 
 
 async def main():
@@ -21,8 +30,9 @@ async def main():
     reader_args = [messages_queue, host, read_port, path]
 
     await asyncio.gather(
-        gui.draw(messages_queue, sending_queue, status_updates_queue),
         read_msgs(*reader_args),
+        show_history(messages_queue),
+        gui.draw(messages_queue, sending_queue, status_updates_queue),
     )
 
 
