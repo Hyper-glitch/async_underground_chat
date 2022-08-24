@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from asyncio import StreamReader, StreamWriter
+from tkinter import messagebox
 
 import aiofiles
 
@@ -17,10 +18,12 @@ async def authorise(reader, writer, token: str):
     await write_data(writer=writer, data=f'{token}{EMPTY_LINE}')
 
     user_info = json.loads(await read_line(reader))
-    logger.debug(f'Authorization completed. User: {user_info["nickname"]}')
 
     if not user_info:
+        messagebox.showinfo('Неизвестный токен', FAILED_AUTH_MESSAGE)
         raise InvalidToken(FAILED_AUTH_MESSAGE)
+
+    logger.debug(f'Authorization completed. User: {user_info["nickname"]}')
 
 
 async def registrate(reader, writer, username, path):
