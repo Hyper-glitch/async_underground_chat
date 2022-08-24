@@ -17,7 +17,7 @@ async def authorise(reader, writer, token: str):
     await write_data(writer=writer, data=f'{token}{EMPTY_LINE}')
 
     user_info = json.loads(await read_line(reader))
-    logger.debug(user_info)
+    logger.debug(f'Authorization completed. User: {user_info["nickname"]}')
 
     if not user_info:
         raise FailedAuthError(FAILED_AUTH_MESSAGE)
