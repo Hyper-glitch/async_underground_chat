@@ -22,11 +22,11 @@ async def main():
 
     await asyncio.gather(
         gui.draw(messages_queue, sending_queue, status_updates_queue),
-        read_msgs(messages_queue),
+        read_msgs(messages_queue, status_updates_queue),
         show_history(messages_queue),
-        send_msgs(sending_queue),
+        send_msgs(sending_queue, status_updates_queue), return_exceptions=True
     )
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(main(), debug=True)
