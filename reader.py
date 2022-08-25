@@ -1,18 +1,15 @@
 import datetime
 import logging
 import time
-from asyncio.exceptions import TimeoutError
 
 import aiofiles
 from anyio import TASK_STATUS_IGNORED
 from anyio.abc import TaskStatus
-from async_timeout import timeout
 
 import gui
 from async_chat_utils import open_connection
 from chat_utils import create_parser
-from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH, READ_MSG_TEXT, TIMEOUT_ERROR_TEXT, \
-    TIMEOUT_EXPIRED_SEC
+from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH, READ_MSG_TEXT
 
 watchdog_logger = logging.getLogger('watchdog_logger')
 
@@ -40,15 +37,8 @@ async def read_msgs(messages_queue, status_updates_queue, watchdog_queue,
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.ESTABLISHED)
 
             while True:
-                try:
-                    async with timeout(TIMEOUT_EXPIRED_SEC):
-                        message = await reader.readline()
-                except TimeoutError:
-                    text = TIMEOUT_ERROR_TEXT
-                else:
-                    text = READ_MSG_TEXT
-
-                watchdog_queue.put_nowait(f'[{int(time.time())}] {text}')
+                message = await reader.readline()
+                watchdog_queue.put_nowait(f'[{int(time.time())}] {READ_MSG_TEXT}')
                 now = datetime.datetime.now()
                 formatted_date = now.strftime("%Y.%m.%d %H:%M:%S")
                 formatted_message = f'[{formatted_date}] {message.decode()}'
