@@ -1,31 +1,13 @@
 import asyncio
 import tkinter as tk
-from enum import Enum
 from tkinter.scrolledtext import ScrolledText
 
-from anyio import TASK_STATUS_IGNORED
+from anyio import TASK_STATUS_IGNORED, create_task_group
 from anyio.abc import TaskStatus
 
+from enums import ReadConnectionStateChanged, SendingConnectionStateChanged
 from exceptions import TkAppClosed
 from settings import GUI_TITTLE, SEND_GUI_BUTTON
-
-
-class ReadConnectionStateChanged(Enum):
-    INITIATED = 'устанавливаем соединение'
-    ESTABLISHED = 'соединение установлено'
-    CLOSED = 'соединение закрыто'
-
-    def __str__(self):
-        return str(self.value)
-
-
-class SendingConnectionStateChanged(Enum):
-    INITIATED = 'устанавливаем соединение'
-    ESTABLISHED = 'соединение установлено'
-    CLOSED = 'соединение закрыто'
-
-    def __str__(self):
-        return str(self.value)
 
 
 class NicknameReceived:
@@ -39,7 +21,9 @@ def process_new_message(input_field, sending_queue):
     input_field.delete(0, tk.END)
 
 
-async def update_tk(root_frame, interval=1 / 120):
+async def update_tk(root_frame, interval=1 / 120, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
+
     while True:
         try:
             root_frame.update()
@@ -49,7 +33,9 @@ async def update_tk(root_frame, interval=1 / 120):
         await asyncio.sleep(interval)
 
 
-async def update_conversation_history(panel, messages_queue):
+async def update_conversation_history(panel, messages_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
+
     while True:
         msg = await messages_queue.get()
 
@@ -64,7 +50,9 @@ async def update_conversation_history(panel, messages_queue):
         panel['state'] = 'disabled'
 
 
-async def update_status_panel(status_labels, status_updates_queue):
+async def update_status_panel(status_labels, status_updates_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
+
     nickname_label, read_label, write_label = status_labels
 
     read_label['text'] = f'Чтение: нет соединения'
@@ -131,8 +119,7 @@ async def draw(messages_queue, sending_queue, status_updates_queue, task_status:
     conversation_panel = ScrolledText(root_frame, wrap='none')
     conversation_panel.pack(side='top', fill='both', expand=True)
 
-    await asyncio.gather(
-        update_tk(root_frame),
-        update_conversation_history(conversation_panel, messages_queue),
-        update_status_panel(status_labels, status_updates_queue),
-    )
+    async with create_task_group() as tg:
+        await tg.start(update_tk, root_frame)
+        await tg.start(update_conversation_history, conversation_panel, messages_queue)
+        await tg.start(update_status_panel, status_labels, status_updates_queue)
