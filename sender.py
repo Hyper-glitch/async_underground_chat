@@ -32,8 +32,11 @@ async def authorise(reader, writer, token: str) -> dict:
 
 
 async def registrate(reader, writer, username, path):
+    await read_line(reader)
     sanitized_nickname = username.replace('\n', '')
+
     await write_data(writer=writer, data=EMPTY_LINE)
+    await read_line(reader)
     await write_data(writer=writer, data=f'{sanitized_nickname}{EMPTY_LINE}')
 
     raw_reg_info = await read_line(reader)
