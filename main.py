@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 
 from anyio import create_task_group, TASK_STATUS_IGNORED, run
 from anyio.abc import TaskStatus
@@ -10,7 +9,7 @@ from async_chat_utils import show_history
 from chat_utils import set_up_logger
 from reader import read_msgs
 from sender import send_msgs
-from settings import LAST_GUI_DRAW_QUEUE
+from settings import LAST_GUI_DRAW_QUEUE, TIMEOUT_ERROR_TEXT, WAIT_RECONNECTION_SEC
 
 watchdog_logger = logging.getLogger('watchdog_logger')
 
@@ -27,7 +26,7 @@ async def watch_for_connection(watchdog_queue, task_status: TaskStatus = TASK_ST
 
     while True:
         log = await watchdog_queue.get()
-        if '1s timeout is elapsed' in log:
+        if TIMEOUT_ERROR_TEXT in log:
             raise ConnectionError
 
         watchdog_logger.info(log)
@@ -38,8 +37,11 @@ async def handle_connection(messages_queue, sending_queue, status_updates_queue,
         try:
             await start_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue)
         except ConnectionError:
-            time.sleep(10)
-            await start_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue)
+            status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
+            status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
+            await asyncio.sleep(WAIT_RECONNECTION_SEC)
+        finally:
+            continue
 
 
 async def main():
