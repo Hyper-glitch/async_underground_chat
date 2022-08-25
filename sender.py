@@ -5,9 +5,12 @@ from asyncio import StreamWriter
 from tkinter import messagebox
 
 import aiofiles
+from anyio import TASK_STATUS_IGNORED
+from anyio.abc import TaskStatus
 
 import gui
-from chat_utils import create_parser, read_line, write_data, open_connection
+from async_chat_utils import read_line, write_data, open_connection
+from chat_utils import create_parser
 from exceptions import InvalidToken
 from settings import (
     CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE, NICKNAME, SEND_MSG_TEXT, SUCCESS_AUTH_TEXT,
@@ -25,17 +28,12 @@ async def authorise(reader, writer, token: str) -> dict:
         messagebox.showinfo(title='Неизвестный токен', message=FAILED_AUTH_MESSAGE)
         raise InvalidToken(FAILED_AUTH_MESSAGE)
 
-    # logger.debug(f'Authorization completed. User: {user_info["nickname"]}')
     return user_info
 
 
 async def registrate(reader, writer, username, path):
     sanitized_nickname = username.replace('\n', '')
-
-    # logger.debug(await read_line(reader))
     await write_data(writer=writer, data=EMPTY_LINE)
-
-    # logger.debug(await read_line(reader))
     await write_data(writer=writer, data=f'{sanitized_nickname}{EMPTY_LINE}')
 
     raw_reg_info = await read_line(reader)
@@ -44,7 +42,6 @@ async def registrate(reader, writer, username, path):
     file_path = os.path.join(path, f'{reg_info["account_hash"]}.json')
     async with aiofiles.open(file_path, mode='w') as file:
         await file.write(raw_reg_info)
-    # logger.debug(reg_info)
 
     return reg_info
 
@@ -53,10 +50,10 @@ async def send_message(watchdog_queue, writer: StreamWriter, message: str):
     sanitized_msg = message.replace('\n', '')
     await write_data(writer, data=f'{sanitized_msg}{EMPTY_LINE * 2}')
     watchdog_queue.put_nowait(f'[{int(time.time())}] {SEND_MSG_TEXT}')
-    # logger.debug(await read_line(reader))
 
 
-async def send_msgs(sending_queue, status_updates_queue, watchdog_queue):
+async def send_msgs(sending_queue, status_updates_queue, watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
     status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
 
     parser = create_parser()
