@@ -11,7 +11,8 @@ from async_timeout import timeout
 import gui
 from async_chat_utils import open_connection
 from chat_utils import create_parser
-from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH, READ_MSG_TEXT
+from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH, READ_MSG_TEXT, TIMEOUT_ERROR_TEXT, \
+    TIMEOUT_EXPIRED_SEC
 
 watchdog_logger = logging.getLogger('watchdog_logger')
 
@@ -40,10 +41,10 @@ async def read_msgs(messages_queue, status_updates_queue, watchdog_queue,
 
             while True:
                 try:
-                    async with timeout(10):
+                    async with timeout(TIMEOUT_EXPIRED_SEC):
                         message = await reader.readline()
                 except TimeoutError:
-                    text = '1s timeout is elapsed'
+                    text = TIMEOUT_ERROR_TEXT
                 else:
                     text = READ_MSG_TEXT
 

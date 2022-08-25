@@ -15,10 +15,13 @@ SEND_GUI_BUTTON = 'Отправить'
 
 FAILED_AUTH_MESSAGE = 'Неизвестный токен. Проверьте его или зарегистрируйтесь заново.'
 RECONNECTION_WAIT_TIME = 180
+TIMEOUT_EXPIRED_SEC = 1
+WAIT_RECONNECTION_SEC = 2
+LAST_GUI_DRAW_QUEUE = 3
 EMPTY_LINE = '\n'
 ALIVE_CONN_TEXT = 'Connection is alive.'
 WATCHDOG_BEFORE_AUTH_TEXT = f'{ALIVE_CONN_TEXT} Prompt before auth'
 SEND_MSG_TEXT = f'{ALIVE_CONN_TEXT} Message sent'
 READ_MSG_TEXT = f'{ALIVE_CONN_TEXT} New message in chat'
 SUCCESS_AUTH_TEXT = f'{ALIVE_CONN_TEXT} Authorization done'
-LAST_GUI_DRAW_QUEUE = 3
+TIMEOUT_ERROR_TEXT = '1s timeout is elapsed'
