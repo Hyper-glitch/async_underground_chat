@@ -3,6 +3,9 @@ import tkinter as tk
 from enum import Enum
 from tkinter.scrolledtext import ScrolledText
 
+from anyio import TASK_STATUS_IGNORED
+from anyio.abc import TaskStatus
+
 from exceptions import TkAppClosed
 from settings import GUI_TITTLE, SEND_GUI_BUTTON
 
@@ -100,7 +103,9 @@ def create_status_panel(root_frame):
     return nickname_label, status_read_label, status_write_label
 
 
-async def draw(messages_queue, sending_queue, status_updates_queue):
+async def draw(messages_queue, sending_queue, status_updates_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
+
     root = tk.Tk()
 
     root.title(GUI_TITTLE)
