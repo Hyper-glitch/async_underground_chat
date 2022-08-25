@@ -10,6 +10,7 @@ from async_chat_utils import show_history
 from chat_utils import set_up_logger
 from reader import read_msgs
 from sender import send_msgs
+from settings import LAST_GUI_DRAW_QUEUE
 
 watchdog_logger = logging.getLogger('watchdog_logger')
 
@@ -32,7 +33,7 @@ async def watch_for_connection(watchdog_queue, task_status: TaskStatus = TASK_ST
         watchdog_logger.info(log)
 
 
-async def handle_connection(messages_queue, status_updates_queue, watchdog_queue, sending_queue):
+async def handle_connection(messages_queue, sending_queue, status_updates_queue, watchdog_queue):
     while True:
         try:
             await start_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue)
@@ -46,13 +47,14 @@ async def main():
     sending_queue = asyncio.Queue()
     status_updates_queue = asyncio.Queue()
     watchdog_queue = asyncio.Queue()
+    queues = [messages_queue, sending_queue, status_updates_queue, watchdog_queue]
 
     set_up_logger()
 
     await asyncio.gather(
-        gui.draw(messages_queue, sending_queue, status_updates_queue),
+        gui.draw(*queues[:LAST_GUI_DRAW_QUEUE]),
         show_history(messages_queue),
-        handle_connection(messages_queue, status_updates_queue, watchdog_queue, sending_queue),
+        handle_connection(*queues),
     )
 
 
