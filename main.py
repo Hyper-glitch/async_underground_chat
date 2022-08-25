@@ -1,28 +1,44 @@
 import asyncio
 import logging
+import time
 
-import aiofiles
+from anyio import create_task_group, TASK_STATUS_IGNORED, run
+from anyio.abc import TaskStatus
 
 import gui
+from async_chat_utils import show_history
 from chat_utils import set_up_logger
 from reader import read_msgs
 from sender import send_msgs
-from settings import CHAT_HISTORY_PATH
 
 watchdog_logger = logging.getLogger('watchdog_logger')
 
 
-async def show_history(messages_queue):
-    async with aiofiles.open(CHAT_HISTORY_PATH, mode='r') as file:
-        lines = await file.readlines()
-    for line in lines:
-        messages_queue.put_nowait(line)
+async def start_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue):
+    async with create_task_group() as tg:
+        await tg.start(read_msgs, messages_queue, status_updates_queue, watchdog_queue)
+        await tg.start(send_msgs, sending_queue, status_updates_queue, watchdog_queue)
+        await tg.start(watch_for_connection, watchdog_queue)
 
 
-async def watch_for_connection(watchdog_queue):
+async def watch_for_connection(watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
+
     while True:
         log = await watchdog_queue.get()
+        if '1s timeout is elapsed' in log:
+            raise ConnectionError
+
         watchdog_logger.info(log)
+
+
+async def handle_connection(messages_queue, status_updates_queue, watchdog_queue, sending_queue):
+    while True:
+        try:
+            await start_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue)
+        except ConnectionError:
+            time.sleep(10)
+            await start_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue)
 
 
 async def main():
@@ -35,12 +51,10 @@ async def main():
 
     await asyncio.gather(
         gui.draw(messages_queue, sending_queue, status_updates_queue),
-        read_msgs(messages_queue, status_updates_queue, watchdog_queue),
         show_history(messages_queue),
-        send_msgs(sending_queue, status_updates_queue, watchdog_queue),
-        watch_for_connection(watchdog_queue),
+        handle_connection(messages_queue, status_updates_queue, watchdog_queue, sending_queue),
     )
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    run(main)
