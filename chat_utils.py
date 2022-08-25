@@ -1,26 +1,6 @@
+"""Module with functions that helps run chat."""
 import argparse
-import asyncio
 import logging
-from contextlib import asynccontextmanager
-
-
-@asynccontextmanager
-async def open_connection(host, port):
-    reader, writer = await asyncio.open_connection(host=host, port=port)
-    try:
-        yield reader, writer
-    finally:
-        writer.close()
-
-
-async def read_line(reader) -> str:
-    chat_line = await reader.readline()
-    return chat_line.decode('utf-8').strip()
-
-
-async def write_data(writer, data: str):
-    writer.write(data.encode())
-    await writer.drain()
 
 
 def create_parser() -> argparse.ArgumentParser:
