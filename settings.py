@@ -21,3 +21,4 @@ WATCHDOG_BEFORE_AUTH_TEXT = f'{ALIVE_CONN_TEXT} Prompt before auth'
 SEND_MSG_TEXT = f'{ALIVE_CONN_TEXT} Message sent'
 READ_MSG_TEXT = f'{ALIVE_CONN_TEXT} New message in chat'
 SUCCESS_AUTH_TEXT = f'{ALIVE_CONN_TEXT} Authorization done'
+LAST_GUI_DRAW_QUEUE = 3
