@@ -74,7 +74,9 @@ async def send_message(watchdog_queue, writer: StreamWriter, message: str):
     watchdog_queue.put_nowait(f'[{int(time.time())}] {SEND_MSG_TEXT}')
 
 
-async def send_msgs(sending_queue, status_updates_queue, watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+async def send_msgs(
+        token, sending_queue, status_updates_queue, watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED,
+):
     task_status.started()
     status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
 
@@ -83,18 +85,6 @@ async def send_msgs(sending_queue, status_updates_queue, watchdog_queue, task_st
 
     host = args.host or CHAT_HOST
     send_port = args.send_port or SEND_CHAT_PORT
-    token = args.token or AUTH_TOKEN
-    username = args.nickname or NICKNAME
-    accounts_path = 'users_info'
-
-    os.makedirs(accounts_path, exist_ok=True)
-
-    if not token:
-        async with open_connection(host, send_port) as conn:
-            status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)
-            reader, writer = conn
-            reg_info = await registrate(reader, writer, username, accounts_path)
-        token = reg_info['account_hash']
 
     async with open_connection(host, send_port) as conn:
         status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)

@@ -14,8 +14,9 @@ from settings import CHAT_HOST, READ_CHAT_PORT, CHAT_HISTORY_PATH, READ_MSG_TEXT
 watchdog_logger = logging.getLogger('watchdog_logger')
 
 
-async def read_msgs(messages_queue, status_updates_queue, watchdog_queue,
-                    task_status: TaskStatus = TASK_STATUS_IGNORED):
+async def read_msgs(
+        messages_queue, status_updates_queue, watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED,
+):
     """Write messages from chat line by line to a file.
 
     Raises:
