@@ -28,3 +28,6 @@ python main.py -M here will be some message
 ```bash
 python main.py -H minechat.dvmn.org -P 5050 -N my_nickname
 ```
+
+## How does it work
+[Screencast from 31.08.2022 16:49:50.webm](https://user-images.githubusercontent.com/54985705/187698619-03ae39e9-d2dc-442f-aafc-b61f35260564.webm)
