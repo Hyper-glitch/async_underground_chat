@@ -7,10 +7,10 @@ from anyio.abc import TaskStatus
 
 import gui
 from async_chat_utils import show_history
-from chat_utils import set_up_logger
+from chat_utils import set_up_logger, create_parser
 from reader import read_msgs
 from sender import send_msgs, ping_server
-from settings import LAST_GUI_DRAW_QUEUE, TIMEOUT_ERROR_TEXT
+from settings import LAST_GUI_DRAW_QUEUE, TIMEOUT_ERROR_TEXT, AUTH_TOKEN
 
 watchdog_logger = logging.getLogger('watchdog_logger')
 
@@ -26,23 +26,23 @@ async def watch_for_connection(watchdog_queue, task_status: TaskStatus = TASK_ST
         watchdog_logger.info(log)
 
 
-async def start_server_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue):
+async def start_server_task_group(token, messages_queue, status_updates_queue, watchdog_queue, sending_queue):
     async with create_task_group() as tg:
         await tg.start(ping_server, watchdog_queue)
         await tg.start(read_msgs, messages_queue, status_updates_queue, watchdog_queue)
-        await tg.start(send_msgs, sending_queue, status_updates_queue, watchdog_queue)
+        await tg.start(send_msgs, token, sending_queue, status_updates_queue, watchdog_queue)
         await tg.start(watch_for_connection, watchdog_queue)
 
 
 async def handle_connection(
         messages_queue, sending_queue, status_updates_queue,
-        watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED
+        watchdog_queue, token, task_status: TaskStatus = TASK_STATUS_IGNORED
 ):
     task_status.started()
 
     while True:
         try:
-            await start_server_task_group(messages_queue, status_updates_queue, watchdog_queue, sending_queue)
+            await start_server_task_group(token, messages_queue, status_updates_queue, watchdog_queue, sending_queue)
         except (ConnectionError, gaierror):
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
@@ -53,18 +53,30 @@ async def handle_connection(
 
 
 async def main():
+    token_queue = asyncio.Queue()
     messages_queue = asyncio.Queue()
     sending_queue = asyncio.Queue()
     status_updates_queue = asyncio.Queue()
     watchdog_queue = asyncio.Queue()
+
     queues = [messages_queue, sending_queue, status_updates_queue, watchdog_queue]
 
     set_up_logger()
 
+    parser = create_parser()
+    args = parser.parse_args()
+
+    token = args.token or AUTH_TOKEN
+
+    if not token:
+        async with create_task_group() as reg_tg:
+            await reg_tg.start(gui.draw_registration, token_queue)
+        token = await token_queue.get()
+
     async with create_task_group() as tg:
         await tg.start(gui.draw, *queues[:LAST_GUI_DRAW_QUEUE])
         await tg.start(show_history, messages_queue)
-        await tg.start(handle_connection, *queues)
+        await tg.start(handle_connection, *queues, token)
 
 
 if __name__ == '__main__':
