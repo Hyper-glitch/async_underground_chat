@@ -8,7 +8,7 @@ This project allows you to connect to the underground minecraft chat, read messa
 pip install -r requirements.txt
 ```
 
-## Create **.env** file and set the <ins>following environmental variables</ins>:  
+## Create **.env** file and set the <ins>following environmental variables, if you don't want to use default values</ins>:  
 | Environmental  | Description                             |
 |----------------|-----------------------------------------|
 | `HOST`         | hostname to listen chat                 |       
@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 ## Running with required argument message
 ```bash
-python main.py -M here will be some message
+python main.py
 ```
 
 ## Running with flags hostname, send_port and nickname
