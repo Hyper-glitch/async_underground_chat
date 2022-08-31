@@ -28,9 +28,6 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '-N', '--nickname', help='your alias in chat', type=str,
     )
-    parser.add_argument(
-        '-M', '--message', help='message that sends to the chat', type=str, nargs='+', required=True,
-    )
     return parser
 
 
