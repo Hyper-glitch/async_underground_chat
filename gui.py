@@ -1,13 +1,18 @@
 import asyncio
 import tkinter as tk
+from tkinter import messagebox
 from tkinter.scrolledtext import ScrolledText
 
+from aiofiles import os
 from anyio import TASK_STATUS_IGNORED, create_task_group
 from anyio.abc import TaskStatus
 
+from async_chat_utils import open_connection
+from chat_utils import create_parser
 from enums import ReadConnectionStateChanged, SendingConnectionStateChanged
 from exceptions import TkAppClosed
-from settings import GUI_TITTLE, SEND_GUI_BUTTON
+from sender import registrate
+from settings import GUI_TITTLE, SEND_GUI_BUTTON, CHAT_HOST, SEND_CHAT_PORT
 
 
 class NicknameReceived:
@@ -123,3 +128,47 @@ async def draw(messages_queue, sending_queue, status_updates_queue, task_status:
         await tg.start(update_tk, root_frame)
         await tg.start(update_conversation_history, conversation_panel, messages_queue)
         await tg.start(update_status_panel, status_labels, status_updates_queue)
+
+
+async def get_token(token_queue, root, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
+
+    parser = create_parser()
+    args = parser.parse_args()
+
+    host = args.host or CHAT_HOST
+    send_port = args.send_port or SEND_CHAT_PORT
+
+    accounts_path = 'users_info'
+    await os.makedirs(accounts_path, exist_ok=True)
+
+    username = await token_queue.get()
+
+    async with open_connection(host, send_port) as conn:
+        reader, writer = conn
+        reg_info = await registrate(reader, writer, username, accounts_path)
+
+    token = reg_info['account_hash']
+    token_queue.put_nowait(token)
+    messagebox.showinfo(message=f'Your token is in the path: {accounts_path}/{token}')
+    root.destroy()
+    raise asyncio.CancelledError
+
+
+async def draw_registration(queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+    task_status.started()
+
+    root = tk.Tk()
+    root.geometry('600x600+1000+400')
+    root.title('MineChat')
+
+    tk.Label(text='Welcome to MainChat!\nPlease Registrate a new account', width=400, height=5).pack()
+    tk.Label(root, text='Enter your username, then push Enter', width=200, height=2).pack()
+
+    input_field = tk.Entry(root)
+    input_field.pack()
+    input_field.bind('<Return>', lambda event: process_new_message(input_field, queue))
+
+    async with create_task_group() as tg:
+        await tg.start(update_tk, root)
+        await tg.start(get_token, queue, root)
