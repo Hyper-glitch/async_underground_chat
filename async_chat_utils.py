@@ -3,6 +3,7 @@ import asyncio
 from contextlib import asynccontextmanager
 
 import aiofiles
+from aiofiles import os
 from anyio import TASK_STATUS_IGNORED
 from anyio.abc import TaskStatus
 
@@ -31,7 +32,8 @@ async def open_connection(host, port):
 async def show_history(messages_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
     task_status.started()
 
-    async with aiofiles.open(CHAT_HISTORY_PATH, mode='r') as file:
-        lines = await file.readlines()
-    for line in lines:
-        messages_queue.put_nowait(line)
+    if await aiofiles.os.path.exists(CHAT_HISTORY_PATH):
+        async with aiofiles.open(CHAT_HISTORY_PATH, mode='r') as file:
+            lines = await file.readlines()
+        for line in lines:
+            messages_queue.put_nowait(line)
