@@ -12,7 +12,7 @@ from reader import read_msgs
 from sender import send_msgs, ping_server
 from settings import (
     LAST_GUI_DRAW_QUEUE, TIMEOUT_ERROR_TEXT, AUTH_TOKEN, MAX_ATTEMPTS_TO_RECONNECTION, WAIT_RECONNECTION_SEC, CHAT_HOST,
-    SEND_CHAT_PORT,
+    SEND_CHAT_PORT, CHAT_HISTORY_PATH, READ_CHAT_PORT,
 )
 
 watchdog_logger = logging.getLogger('watchdog_logger')
@@ -30,19 +30,20 @@ async def watch_for_connection(watchdog_queue, task_status: TaskStatus = TASK_ST
 
 
 async def start_server_task_group(
-        token, host, send_port, messages_queue,
+        token, host, send_port, read_port, path, messages_queue,
         status_updates_queue, watchdog_queue, sending_queue,
 ):
     async with create_task_group() as tg:
         await tg.start(ping_server, watchdog_queue)
-        await tg.start(read_msgs, messages_queue, status_updates_queue, watchdog_queue)
+        await tg.start(read_msgs, read_port, path, host, messages_queue, status_updates_queue, watchdog_queue)
         await tg.start(send_msgs, token, host, send_port, sending_queue, status_updates_queue, watchdog_queue)
         await tg.start(watch_for_connection, watchdog_queue)
 
 
 async def handle_connection(
         messages_queue, sending_queue, status_updates_queue,
-        watchdog_queue, token, host, send_port, task_status: TaskStatus = TASK_STATUS_IGNORED
+        watchdog_queue, token, host, send_port, read_port,
+        path, task_status: TaskStatus = TASK_STATUS_IGNORED,
 ):
     task_status.started()
     attempts_to_reconnection = 0
@@ -50,7 +51,8 @@ async def handle_connection(
     while True:
         try:
             await start_server_task_group(
-                token, host, send_port, messages_queue, status_updates_queue, watchdog_queue, sending_queue,
+                token, host, send_port, read_port, path, messages_queue,
+                status_updates_queue, watchdog_queue, sending_queue,
             )
         except (ConnectionError, gaierror):
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
@@ -59,9 +61,11 @@ async def handle_connection(
         finally:
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.INITIATED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
+
             if attempts_to_reconnection > MAX_ATTEMPTS_TO_RECONNECTION:
                 attempts_to_reconnection = 0
                 await asyncio.sleep(WAIT_RECONNECTION_SEC)
+
             continue
 
 
@@ -73,7 +77,9 @@ async def main():
     args = parser.parse_args()
 
     token = args.token or AUTH_TOKEN
+    path = args.path or CHAT_HISTORY_PATH
     host = args.host or CHAT_HOST
+    read_port = args.read_port or READ_CHAT_PORT
     send_port = args.send_port or SEND_CHAT_PORT
 
     token_queue = asyncio.Queue()
@@ -91,7 +97,7 @@ async def main():
     async with create_task_group() as tg:
         await tg.start(gui.draw, *queues[:LAST_GUI_DRAW_QUEUE])
         await tg.start(read_history, messages_queue)
-        await tg.start(handle_connection, *queues, token, host, send_port)
+        await tg.start(handle_connection, *queues, token, host, send_port, read_port, path)
 
 
 if __name__ == '__main__':
