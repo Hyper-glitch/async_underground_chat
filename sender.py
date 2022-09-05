@@ -13,7 +13,6 @@ from async_timeout import timeout
 
 import gui
 from async_chat_utils import read_line, write_data, open_connection
-from chat_utils import create_parser
 from exceptions import InvalidToken
 from settings import (
     CHAT_HOST, SEND_CHAT_PORT, FAILED_AUTH_MESSAGE, EMPTY_LINE, SEND_MSG_TEXT, SUCCESS_AUTH_TEXT,
@@ -29,13 +28,12 @@ async def ping_server(watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNO
 
         while True:
             await asyncio.sleep(SERVER_PING_FREQUENCY_SEC)
-            await send_message(watchdog_queue, writer, message='')
-            try:
-                async with timeout(TIMEOUT_EXPIRED_SEC):
-                    await reader.readline()
-            except TimeoutError:
+            async with timeout(TIMEOUT_EXPIRED_SEC) as cm:
+                await send_message(watchdog_queue, writer, message='')
+                await reader.readline()
+            if cm.expired:
                 watchdog_queue.put_nowait(f'[{int(time.time())}] {TIMEOUT_ERROR_TEXT}')
-                writer.close()
+                raise TimeoutError
 
 
 async def authorise(reader, writer, token: str) -> dict:
