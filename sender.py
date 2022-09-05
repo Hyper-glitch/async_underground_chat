@@ -35,6 +35,7 @@ async def ping_server(watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNO
                     await reader.readline()
             except TimeoutError:
                 watchdog_queue.put_nowait(f'[{int(time.time())}] {TIMEOUT_ERROR_TEXT}')
+                writer.close()
 
 
 async def authorise(reader, writer, token: str) -> dict:
@@ -75,16 +76,11 @@ async def send_message(watchdog_queue, writer: StreamWriter, message: str):
 
 
 async def send_msgs(
-        token, sending_queue, status_updates_queue, watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED,
+        token, host, send_port, sending_queue, status_updates_queue,
+        watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNORED,
 ):
     task_status.started()
     status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
-
-    parser = create_parser()
-    args = parser.parse_args()
-
-    host = args.host or CHAT_HOST
-    send_port = args.send_port or SEND_CHAT_PORT
 
     async with open_connection(host, send_port) as conn:
         status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.ESTABLISHED)
