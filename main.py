@@ -10,7 +10,9 @@ from async_chat_utils import read_history
 from chat_utils import set_up_logger, create_parser
 from reader import read_msgs
 from sender import send_msgs, ping_server
-from settings import LAST_GUI_DRAW_QUEUE, TIMEOUT_ERROR_TEXT, AUTH_TOKEN
+from settings import (
+    LAST_GUI_DRAW_QUEUE, TIMEOUT_ERROR_TEXT, AUTH_TOKEN, MAX_ATTEMPTS_TO_RECONNECTION, WAIT_RECONNECTION_SEC,
+)
 
 watchdog_logger = logging.getLogger('watchdog_logger')
 
@@ -39,6 +41,7 @@ async def handle_connection(
         watchdog_queue, token, task_status: TaskStatus = TASK_STATUS_IGNORED
 ):
     task_status.started()
+    attempts_to_reconnection = 0
 
     while True:
         try:
@@ -46,9 +49,13 @@ async def handle_connection(
         except (ConnectionError, gaierror):
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
+            attempts_to_reconnection += 1
         finally:
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.INITIATED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
+            if attempts_to_reconnection > MAX_ATTEMPTS_TO_RECONNECTION:
+                attempts_to_reconnection = 0
+                await asyncio.sleep(WAIT_RECONNECTION_SEC)
             continue
 
 
