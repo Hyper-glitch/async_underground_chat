@@ -17,7 +17,7 @@ pip install -r requirements.txt
 | `HISTORY_PATH`              | a path to write chat history             |
 | `AUTH_TOKEN`                | token that authorize user in chat        |
 | `NICKNAME`                  | your alias in chat                       |
-| `TIMEOUT_EXPIRED_SEC`       | time in sec expired for task             |
+| `TIMEOUT_EXPIRED_SEC`       | expired time in sec for a request        |
 | `SERVER_PING_FREQUENCY_SEC` | time in sec between requests to a server |
 
 
