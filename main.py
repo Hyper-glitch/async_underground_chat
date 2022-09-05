@@ -6,7 +6,7 @@ from anyio import create_task_group, TASK_STATUS_IGNORED, run
 from anyio.abc import TaskStatus
 
 import gui
-from async_chat_utils import show_history
+from async_chat_utils import read_history
 from chat_utils import set_up_logger, create_parser
 from reader import read_msgs
 from sender import send_msgs, ping_server
@@ -75,7 +75,7 @@ async def main():
 
     async with create_task_group() as tg:
         await tg.start(gui.draw, *queues[:LAST_GUI_DRAW_QUEUE])
-        await tg.start(show_history, messages_queue)
+        await tg.start(read_history, messages_queue)
         await tg.start(handle_connection, *queues, token)
 
 

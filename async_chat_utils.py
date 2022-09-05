@@ -29,7 +29,7 @@ async def open_connection(host, port):
         writer.close()
 
 
-async def show_history(messages_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+async def read_history(messages_queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
     task_status.started()
 
     if await aiofiles.os.path.exists(CHAT_HISTORY_PATH):
