@@ -87,11 +87,12 @@ async def main():
     sending_queue = asyncio.Queue()
     status_updates_queue = asyncio.Queue()
     watchdog_queue = asyncio.Queue()
+
     queues = [messages_queue, sending_queue, status_updates_queue, watchdog_queue]
 
     if not token:
         async with create_task_group() as reg_tg:
-            await reg_tg.start(gui.draw_registration, token_queue)
+            await reg_tg.start(gui.draw_registration, token_queue, host, send_port)
         token = await token_queue.get()
 
     async with create_task_group() as tg:

@@ -130,14 +130,8 @@ async def draw(messages_queue, sending_queue, status_updates_queue, task_status:
         await tg.start(update_status_panel, status_labels, status_updates_queue)
 
 
-async def get_token(token_queue, root, task_status: TaskStatus = TASK_STATUS_IGNORED):
+async def get_token(token_queue, root, host, send_port, task_status: TaskStatus = TASK_STATUS_IGNORED):
     task_status.started()
-
-    parser = create_parser()
-    args = parser.parse_args()
-
-    host = args.host or CHAT_HOST
-    send_port = args.send_port or SEND_CHAT_PORT
 
     accounts_path = 'users_info'
     await os.makedirs(accounts_path, exist_ok=True)
@@ -155,7 +149,7 @@ async def get_token(token_queue, root, task_status: TaskStatus = TASK_STATUS_IGN
     raise asyncio.CancelledError
 
 
-async def draw_registration(queue, task_status: TaskStatus = TASK_STATUS_IGNORED):
+async def draw_registration(queue, host, send_port, task_status: TaskStatus = TASK_STATUS_IGNORED):
     task_status.started()
 
     root = tk.Tk()
@@ -171,4 +165,4 @@ async def draw_registration(queue, task_status: TaskStatus = TASK_STATUS_IGNORED
 
     async with create_task_group() as tg:
         await tg.start(update_tk, root)
-        await tg.start(get_token, queue, root)
+        await tg.start(get_token, queue, root, host, send_port)
