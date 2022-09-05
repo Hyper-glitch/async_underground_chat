@@ -16,8 +16,8 @@ from async_chat_utils import read_line, write_data, open_connection
 from chat_utils import create_parser
 from exceptions import InvalidToken
 from settings import (
-    CHAT_HOST, SEND_CHAT_PORT, AUTH_TOKEN, FAILED_AUTH_MESSAGE, EMPTY_LINE, NICKNAME, SEND_MSG_TEXT, SUCCESS_AUTH_TEXT,
-    WATCHDOG_BEFORE_AUTH_TEXT, TIMEOUT_ERROR_TEXT,
+    CHAT_HOST, SEND_CHAT_PORT, FAILED_AUTH_MESSAGE, EMPTY_LINE, SEND_MSG_TEXT, SUCCESS_AUTH_TEXT,
+    WATCHDOG_BEFORE_AUTH_TEXT, TIMEOUT_ERROR_TEXT, TIMEOUT_EXPIRED_SEC, SERVER_PING_FREQUENCY_SEC,
 )
 
 
@@ -28,10 +28,10 @@ async def ping_server(watchdog_queue, task_status: TaskStatus = TASK_STATUS_IGNO
         reader, writer = conn
 
         while True:
-            await asyncio.sleep(1)
+            await asyncio.sleep(SERVER_PING_FREQUENCY_SEC)
             await send_message(watchdog_queue, writer, message='')
             try:
-                async with timeout(1):
+                async with timeout(TIMEOUT_EXPIRED_SEC):
                     await reader.readline()
             except TimeoutError:
                 watchdog_queue.put_nowait(f'[{int(time.time())}] {TIMEOUT_ERROR_TEXT}')
