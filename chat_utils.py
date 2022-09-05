@@ -31,11 +31,9 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def set_up_logger():
-    watchdog_logger = logging.getLogger('watchdog_logger')
-    watchdog_logger.setLevel(logging.DEBUG)
-
-    watchdog_handler = logging.StreamHandler()
-    watchdog_handler.setLevel(logging.DEBUG)
-    watchdog_handler.setFormatter(logging.Formatter(u'%(message)s'))
-    watchdog_logger.addHandler(watchdog_handler)
+def set_up_logger(logger):
+    logger.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(logging.Formatter(u'%(message)s'))
+    logger.addHandler(handler)

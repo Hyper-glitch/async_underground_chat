@@ -53,20 +53,20 @@ async def handle_connection(
 
 
 async def main():
-    token_queue = asyncio.Queue()
-    messages_queue = asyncio.Queue()
-    sending_queue = asyncio.Queue()
-    status_updates_queue = asyncio.Queue()
-    watchdog_queue = asyncio.Queue()
-
-    queues = [messages_queue, sending_queue, status_updates_queue, watchdog_queue]
-
-    set_up_logger()
+    watchdog_logger = logging.getLogger('watchdog_logger')
+    set_up_logger(watchdog_logger)
 
     parser = create_parser()
     args = parser.parse_args()
 
     token = args.token or AUTH_TOKEN
+
+    token_queue = asyncio.Queue()
+    messages_queue = asyncio.Queue()
+    sending_queue = asyncio.Queue()
+    status_updates_queue = asyncio.Queue()
+    watchdog_queue = asyncio.Queue()
+    queues = [messages_queue, sending_queue, status_updates_queue, watchdog_queue]
 
     if not token:
         async with create_task_group() as reg_tg:
