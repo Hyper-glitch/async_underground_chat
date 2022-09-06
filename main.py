@@ -25,9 +25,6 @@ async def watch_for_connection(watchdog_queue, task_status: TaskStatus = TASK_ST
         log = await watchdog_queue.get()
         watchdog_logger.info(log)
 
-        if TIMEOUT_ERROR_TEXT in log:
-            raise gaierror
-
 
 async def start_server_task_group(
         token, host, send_port, read_port, path, messages_queue,
