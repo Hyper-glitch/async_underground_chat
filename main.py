@@ -55,10 +55,10 @@ async def handle_connection(
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
             attempts_to_reconnection += 1
+            await asyncio.sleep(SHORT_WAIT_RECONNECTION_SEC)
         finally:
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.INITIATED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
-            await asyncio.sleep(SHORT_WAIT_RECONNECTION_SEC)
 
             if attempts_to_reconnection > MAX_ATTEMPTS_TO_RECONNECTION:
                 attempts_to_reconnection = 0
