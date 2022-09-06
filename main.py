@@ -11,7 +11,7 @@ from chat_utils import set_up_logger, create_parser
 from reader import read_msgs
 from sender import send_msgs, ping_server
 from settings import (
-    LAST_GUI_DRAW_QUEUE, TIMEOUT_ERROR_TEXT, AUTH_TOKEN, MAX_ATTEMPTS_TO_RECONNECTION, LONG_WAIT_RECONNECTION_SEC,
+    LAST_GUI_DRAW_QUEUE, AUTH_TOKEN, MAX_ATTEMPTS_TO_RECONNECTION, LONG_WAIT_RECONNECTION_SEC,
     CHAT_HOST, SEND_CHAT_PORT, CHAT_HISTORY_PATH, READ_CHAT_PORT, SHORT_WAIT_RECONNECTION_SEC,
 )
 
