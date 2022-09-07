@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from _socket import gaierror
 
 from anyio import create_task_group, TASK_STATUS_IGNORED, run
@@ -12,7 +13,8 @@ from reader import read_msgs
 from sender import send_msgs, ping_server
 from settings import (
     LAST_GUI_DRAW_QUEUE, AUTH_TOKEN, MAX_ATTEMPTS_TO_RECONNECTION, LONG_WAIT_RECONNECTION_SEC,
-    CHAT_HOST, SEND_CHAT_PORT, CHAT_HISTORY_PATH, READ_CHAT_PORT, SHORT_WAIT_RECONNECTION_SEC,
+    CHAT_HOST, SEND_CHAT_PORT, CHAT_HISTORY_PATH, READ_CHAT_PORT, SHORT_WAIT_RECONNECTION_SEC, RECONNECTION_TEXT,
+    DEAD_CONN_TEXT,
 )
 
 watchdog_logger = logging.getLogger('watchdog_logger')
@@ -52,17 +54,24 @@ async def handle_connection(
                 status_updates_queue, watchdog_queue, sending_queue,
             )
         except (ConnectionError, gaierror):
+            watchdog_logger.info(f'[{int(time.time())}] {DEAD_CONN_TEXT}')
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
-            attempts_to_reconnection += 1
-            await asyncio.sleep(SHORT_WAIT_RECONNECTION_SEC)
+            watchdog_logger.info(f'[{int(time.time())}] {RECONNECTION_TEXT} in {SHORT_WAIT_RECONNECTION_SEC} sec')
         finally:
+            attempts_to_reconnection += 1
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.INITIATED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
+            time.sleep(SHORT_WAIT_RECONNECTION_SEC)
 
             if attempts_to_reconnection > MAX_ATTEMPTS_TO_RECONNECTION:
+                watchdog_logger.info(
+                    f'[{int(time.time())}] {MAX_ATTEMPTS_TO_RECONNECTION} attempts are over. '
+                    f'{RECONNECTION_TEXT} in {LONG_WAIT_RECONNECTION_SEC} sec'
+                )
                 attempts_to_reconnection = 0
-                await asyncio.sleep(LONG_WAIT_RECONNECTION_SEC)
+                time.sleep(LONG_WAIT_RECONNECTION_SEC)
+
             continue
 
 
