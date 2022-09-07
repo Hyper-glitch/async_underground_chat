@@ -56,9 +56,9 @@ async def handle_connection(
             watchdog_logger.info(f'[{int(time.time())}] {DEAD_CONN_TEXT}')
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.CLOSED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.CLOSED)
-            watchdog_logger.info(f'[{int(time.time())}] {RECONNECTION_TEXT} in {SHORT_WAIT_RECONNECTION_SEC} sec')
         finally:
             attempts_to_reconnection += 1
+            watchdog_logger.info(f'[{int(time.time())}] {RECONNECTION_TEXT} in {SHORT_WAIT_RECONNECTION_SEC} sec')
             status_updates_queue.put_nowait(gui.ReadConnectionStateChanged.INITIATED)
             status_updates_queue.put_nowait(gui.SendingConnectionStateChanged.INITIATED)
             time.sleep(SHORT_WAIT_RECONNECTION_SEC)
