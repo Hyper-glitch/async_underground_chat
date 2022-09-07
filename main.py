@@ -10,11 +10,10 @@ import gui
 from async_chat_utils import read_history
 from chat_utils import set_up_logger, create_parser
 from reader import read_msgs
-from sender import send_msgs, ping_server
+from sender import send_msgs, ping_pong_server
 from settings import (
-    LAST_GUI_DRAW_QUEUE, AUTH_TOKEN, MAX_ATTEMPTS_TO_RECONNECTION, LONG_WAIT_RECONNECTION_SEC,
-    CHAT_HOST, SEND_CHAT_PORT, CHAT_HISTORY_PATH, READ_CHAT_PORT, SHORT_WAIT_RECONNECTION_SEC, RECONNECTION_TEXT,
-    DEAD_CONN_TEXT,
+    LAST_GUI_DRAW_QUEUE, AUTH_TOKEN, MAX_ATTEMPTS_TO_RECONNECTION, LONG_WAIT_RECONNECTION_SEC, CHAT_HOST,
+    SEND_CHAT_PORT, CHAT_HISTORY_PATH, READ_CHAT_PORT, SHORT_WAIT_RECONNECTION_SEC, RECONNECTION_TEXT, DEAD_CONN_TEXT,
 )
 
 watchdog_logger = logging.getLogger('watchdog_logger')
@@ -33,7 +32,7 @@ async def start_server_task_group(
         status_updates_queue, watchdog_queue, sending_queue,
 ):
     async with create_task_group() as tg:
-        await tg.start(ping_server, watchdog_queue)
+        await tg.start(ping_pong_server, watchdog_queue)
         await tg.start(read_msgs, read_port, path, host, messages_queue, status_updates_queue, watchdog_queue)
         await tg.start(send_msgs, token, host, send_port, sending_queue, status_updates_queue, watchdog_queue)
         await tg.start(watch_for_connection, watchdog_queue)
