@@ -153,7 +153,7 @@ async def draw_registration(queue, host, send_port, task_status: TaskStatus = TA
     task_status.started()
 
     root = tk.Tk()
-    root.geometry('300x300+1000+400')
+    root.geometry('600x400+1000+400')
     root.title('MineChat')
 
     tk.Label(text='Welcome to MainChat!\nPlease Registrate a new account', width=400, height=5).pack()
